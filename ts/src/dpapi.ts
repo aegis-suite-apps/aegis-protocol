@@ -117,24 +117,43 @@ function loadBunDpapi(): NativeDpapi | null {
   return cachedNativeDpapi;
 }
 
-/** Protects bytes with Windows DPAPI (current user scope). On non-Windows POSIX platforms returns bytes unchanged. */
+function nodeDpapi(mode: "protect" | "unprotect", input: Uint8Array): Uint8Array {
+  if (input.byteLength === 0) return new Uint8Array(0);
+  const psScript =
+    mode === "protect"
+      ? "Add-Type -AssemblyName System.Security; $b=[Convert]::FromBase64String(([Console]::In.ReadToEnd()).Trim()); $o=[Security.Cryptography.ProtectedData]::Protect($b,$null,[Security.Cryptography.DataProtectionScope]::CurrentUser); [Console]::Out.Write([Convert]::ToBase64String($o))"
+      : "Add-Type -AssemblyName System.Security; $b=[Convert]::FromBase64String(([Console]::In.ReadToEnd()).Trim()); $o=[Security.Cryptography.ProtectedData]::Unprotect($b,$null,[Security.Cryptography.DataProtectionScope]::CurrentUser); [Console]::Out.Write([Convert]::ToBase64String($o))";
+
+  for (const shell of ["powershell.exe", "pwsh.exe"]) {
+    const res = child_process.spawnSync(
+      shell,
+      ["-NoProfile", "-NonInteractive", "-Command", psScript],
+      {
+        input: Buffer.from(input).toString("base64"),
+        encoding: "utf8",
+        windowsHide: true,
+        timeout: 10_000,
+      },
+    );
+    if (!res.error && res.status === 0 && res.stdout.trim()) {
+      return new Uint8Array(Buffer.from(res.stdout.trim(), "base64"));
+    }
+  }
+  throw new Error(`Windows DPAPI (${mode}) failed under Node.js runtime`);
+}
+
+/** Protects bytes with Windows DPAPI (current user scope). Uses native bun:ffi in Bun and ProtectedData fallback in Node. */
 export function protectSecretBytes(plain: Uint8Array): Uint8Array {
   if (process.platform !== "win32") return plain;
   const native = loadBunDpapi();
-  if (!native) {
-    throw new Error("DPAPI requires Bun on Windows");
-  }
-  return native.protect(plain);
+  return native ? native.protect(plain) : nodeDpapi("protect", plain);
 }
 
-/** Unprotects bytes protected with Windows DPAPI. On non-Windows POSIX platforms returns bytes unchanged. */
+/** Unprotects bytes protected with Windows DPAPI. Uses native bun:ffi in Bun and ProtectedData fallback in Node. */
 export function unprotectSecretBytes(cipher: Uint8Array): Uint8Array {
   if (process.platform !== "win32") return cipher;
   const native = loadBunDpapi();
-  if (!native) {
-    throw new Error("DPAPI requires Bun on Windows");
-  }
-  return native.unprotect(cipher);
+  return native ? native.unprotect(cipher) : nodeDpapi("unprotect", cipher);
 }
 
 /** Restricts filesystem permissions to the current user (plus Administrators/SYSTEM on Windows). */
