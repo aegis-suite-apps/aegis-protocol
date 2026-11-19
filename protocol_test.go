@@ -270,3 +270,16 @@ func TestAgentEnrollRefreshAndRevokeRoundTrip(t *testing.T) {
 		t.Fatalf("expected credentials purged after revoke, got %v", err)
 	}
 }
+
+func TestDefaultVerifierLoadsCanonicalKey(t *testing.T) {
+	v, err := protocol.DefaultVerifier(protocol.DefaultIssuer)
+	if err != nil {
+		t.Fatalf("DefaultVerifier failed: %v", err)
+	}
+	if v.Issuer != "https://rd.tonyml.com" {
+		t.Fatalf("unexpected default issuer: %q", v.Issuer)
+	}
+	if _, ok := v.Keys[protocol.DefaultPublicKeyID]; !ok {
+		t.Fatalf("expected canonical key %q in verifier", protocol.DefaultPublicKeyID)
+	}
+}

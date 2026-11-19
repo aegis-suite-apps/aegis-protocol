@@ -245,4 +245,11 @@ describe("aegis-protocol v2 TypeScript", () => {
     expect(normalizeBaseUrl("http://localhost:8787/foo")).toBe("http://localhost:8787");
     expect(normalizeBaseUrl("https://rd.tonyml.com/fleet")).toBe("https://rd.tonyml.com");
   });
+
+  test("loads canonical RD default public keys and issuer", async () => {
+    const keys = await import("../src/index").then((m) => m.defaultPublicKeys());
+    const { DEFAULT_ISSUER, DEFAULT_PUBLIC_KEY_ID } = await import("../src/index");
+    expect(DEFAULT_ISSUER).toBe("https://rd.tonyml.com");
+    expect(keys[DEFAULT_PUBLIC_KEY_ID]).toBeDefined();
+  });
 });

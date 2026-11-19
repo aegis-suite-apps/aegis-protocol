@@ -2,6 +2,14 @@ import crypto from "node:crypto";
 import { errors, importPKCS8, importSPKI, jwtVerify, SignJWT, type CryptoKey, type JWTPayload } from "jose";
 import { AGENT_JWT_AUDIENCE, leaseClaimsSchema, type LeaseClaims } from "./schema";
 
+export const DEFAULT_ISSUER = "https://rd.tonyml.com";
+export const DEFAULT_PUBLIC_KEY_ID = "ed25519-2026-11";
+export const DEFAULT_PUBLIC_KEY_BASE64 = "MCowBQYDK2VwAyEA1MjofyyH5wOd+0dNGX3icuS+DrmCfETdKug8t0OiqTA=";
+
+export const DEFAULT_PUBLIC_KEYS_BASE64: Readonly<Record<string, string>> = {
+  [DEFAULT_PUBLIC_KEY_ID]: DEFAULT_PUBLIC_KEY_BASE64,
+};
+
 /** Computes lowercase SHA-256 hex digest of UTF-8 text or raw bytes. */
 export function sha256Hex(input: string | Uint8Array): string {
   return crypto.createHash("sha256").update(input).digest("hex");
@@ -21,6 +29,14 @@ export async function importPublicKeyBase64(spkiBase64: string): Promise<CryptoK
   const lines = trimmed.match(/.{1,64}/g)?.join("\n") ?? trimmed;
   const pem = `-----BEGIN PUBLIC KEY-----\n${lines}\n-----END PUBLIC KEY-----`;
   return importSPKI(pem, "EdDSA");
+}
+
+/** Imports all canonical Aegis RD Ed25519 public keys indexed by key ID. */
+export async function defaultPublicKeys(): Promise<Record<string, CryptoKey>> {
+  const entries = await Promise.all(
+    Object.entries(DEFAULT_PUBLIC_KEYS_BASE64).map(async ([kid, b64]) => [kid, await importPublicKeyBase64(b64)] as const),
+  );
+  return Object.fromEntries(entries);
 }
 
 /** Imports an Ed25519 SPKI public key in PEM format. */

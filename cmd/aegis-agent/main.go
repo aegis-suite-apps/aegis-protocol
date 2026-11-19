@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -12,10 +11,10 @@ import (
 	protocol "github.com/aegis-suite-apps/aegis-protocol"
 )
 
-// Overridable via -ldflags at build time; defaults to AegisRD key from docs/rd-clave-publica.md.
+// Overridable via -ldflags at build time; defaults to canonical AegisRD key in protocol package.
 var (
-	DefaultPublicKeyID     = "ed25519-2026-11"
-	DefaultPublicKeyBase64 = "MCowBQYDK2VwAyEA1MjofyyH5wOd+0dNGX3icuS+DrmCfETdKug8t0OiqTA="
+	DefaultPublicKeyID     = protocol.DefaultPublicKeyID
+	DefaultPublicKeyBase64 = protocol.DefaultPublicKeyBase64
 )
 
 func main() {
@@ -48,6 +47,10 @@ func usage() {
 }
 
 func buildVerifier(issuer, keyID, keyB64 string) (protocol.Verifier, error) {
+	keys, err := protocol.DefaultPublicKeys()
+	if err != nil {
+		return protocol.Verifier{}, err
+	}
 	if keyB64 == "" {
 		keyB64 = os.Getenv("AEGIS_PUBLIC_KEY_B64")
 	}
@@ -57,11 +60,14 @@ func buildVerifier(issuer, keyID, keyB64 string) (protocol.Verifier, error) {
 	if keyID == "" {
 		keyID = DefaultPublicKeyID
 	}
-	pub, err := protocol.ParsePublicKeyBase64(keyB64)
-	if err != nil {
-		return protocol.Verifier{}, err
+	if keyB64 != "" {
+		pub, err := protocol.ParsePublicKeyBase64(keyB64)
+		if err != nil {
+			return protocol.Verifier{}, err
+		}
+		keys[keyID] = pub
 	}
-	return protocol.NewVerifier(issuer, map[string]ed25519.PublicKey{keyID: pub}), nil
+	return protocol.NewVerifier(issuer, keys), nil
 }
 
 func runEnroll(args []string) {

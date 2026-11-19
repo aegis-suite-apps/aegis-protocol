@@ -46,6 +46,39 @@ type Verifier struct {
 	Keys   map[string]ed25519.PublicKey
 }
 
+const (
+	DefaultIssuer          = "https://rd.tonyml.com"
+	DefaultPublicKeyID     = "ed25519-2026-11"
+	DefaultPublicKeyBase64 = "MCowBQYDK2VwAyEA1MjofyyH5wOd+0dNGX3icuS+DrmCfETdKug8t0OiqTA="
+)
+
+// DefaultPublicKeysBase64 holds the trusted Aegis RD Ed25519 public keys indexed by key ID.
+var DefaultPublicKeysBase64 = map[string]string{
+	DefaultPublicKeyID: DefaultPublicKeyBase64,
+}
+
+// DefaultPublicKeys decodes all canonical Aegis RD public keys.
+func DefaultPublicKeys() (map[string]ed25519.PublicKey, error) {
+	keys := make(map[string]ed25519.PublicKey, len(DefaultPublicKeysBase64))
+	for kid, raw := range DefaultPublicKeysBase64 {
+		pub, err := ParsePublicKeyBase64(raw)
+		if err != nil {
+			return nil, fmt.Errorf("default public key %s: %w", kid, err)
+		}
+		keys[kid] = pub
+	}
+	return keys, nil
+}
+
+// DefaultVerifier builds a lease verifier loaded with canonical Aegis RD public keys.
+func DefaultVerifier(issuer string) (Verifier, error) {
+	keys, err := DefaultPublicKeys()
+	if err != nil {
+		return Verifier{}, err
+	}
+	return NewVerifier(issuer, keys), nil
+}
+
 // NewVerifier creates a lease verifier for a specific issuer and key map.
 func NewVerifier(issuer string, keys map[string]ed25519.PublicKey) Verifier {
 	return Verifier{Issuer: issuer, Keys: keys}

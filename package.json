@@ -1,6 +1,6 @@
 {
   "name": "@aegis-suite-apps/protocol",
-  "version": "2.0.0",
+  "version": "0.3.0",
   "description": "Shared protocol v2 schemas, Ed25519 lease signer/verifier, DPAPI store, and agent guard for Aegis Suite.",
   "type": "module",
   "main": "./ts/src/index.ts",
