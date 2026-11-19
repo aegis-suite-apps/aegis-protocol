@@ -58,6 +58,11 @@ func (a *Agent) Enroll(ctx context.Context, baseURL, code, appTarget string) (En
 	if err != nil {
 		return EnrollResponse{}, err
 	}
+	if _, normErr := NormalizeBaseURL(res.Config.WorkerBaseURL); normErr != nil {
+		if normBase, err := NormalizeBaseURL(baseURL); err == nil {
+			res.Config.WorkerBaseURL = normBase
+		}
+	}
 
 	verifier := a.keys
 	if verifier.Issuer == "" {

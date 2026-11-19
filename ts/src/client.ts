@@ -220,6 +220,11 @@ export class AegisAgent {
       machineFingerprint: fp,
       appTarget,
     });
+    try {
+      normalizeBaseUrl(res.config.worker_base_url);
+    } catch {
+      res.config.worker_base_url = normalizeBaseUrl(baseUrl);
+    }
     const issuer = this.options.issuer ?? res.config.worker_base_url;
     const claims = await verifyLease(res.lease_token, {
       issuer,
