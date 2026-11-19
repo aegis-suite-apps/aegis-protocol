@@ -177,6 +177,46 @@ func containsAudience(audience jwt.ClaimStrings, expected string) bool {
 	return false
 }
 
+// SignLease signs a LeaseClaims payload using Ed25519 (EdDSA) for testing and local harnesses.
+func SignLease(claims LeaseClaims, keyID string, priv ed25519.PrivateKey) (string, error) {
+	if keyID == "" {
+		return "", errors.New("keyID is required")
+	}
+	if len(priv) != ed25519.PrivateKeySize {
+		return "", errors.New("invalid Ed25519 private key")
+	}
+	wire := jwtClaimsWire{
+		ProtocolVersion:        claims.ProtocolVersion,
+		ServerTime:             claims.ServerTime,
+		CacheUntil:             claims.CacheUntil,
+		GraceUntil:             claims.GraceUntil,
+		Product:                claims.Product,
+		AppName:                claims.AppName,
+		MachineFingerprintHash: claims.MachineFingerprintHash,
+		LeaseNonce:             claims.LeaseNonce,
+		Enforcement:            claims.Enforcement,
+		License:                claims.License,
+		Contact:                claims.Contact,
+		Notices:                claims.Notices,
+		RequiredTermsVersion:   claims.RequiredTermsVersion,
+		TermsURL:               claims.TermsURL,
+		PrivacyURL:             claims.PrivacyURL,
+		Config:                 claims.Config,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    claims.Issuer,
+			Subject:   claims.Subject,
+			Audience:  jwt.ClaimStrings(claims.Audience),
+			ID:        claims.ID,
+			IssuedAt:  jwt.NewNumericDate(time.Unix(claims.IssuedAt, 0).UTC()),
+			NotBefore: jwt.NewNumericDate(time.Unix(claims.NotBefore, 0).UTC()),
+			ExpiresAt: jwt.NewNumericDate(time.Unix(claims.ExpiresAt, 0).UTC()),
+		},
+	}
+	tok := jwt.NewWithClaims(jwt.SigningMethodEdDSA, wire)
+	tok.Header["kid"] = keyID
+	return tok.SignedString(priv)
+}
+
 func constantTimeEqual(a, b string) bool {
 	if len(a) != len(b) {
 		return false
