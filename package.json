@@ -1,0 +1,22 @@
+{
+  "name": "@aegis-suite-apps/protocol",
+  "version": "2.0.0",
+  "description": "Shared protocol v2 schemas, Ed25519 lease signer/verifier, DPAPI store, and agent guard for Aegis Suite.",
+  "type": "module",
+  "main": "./ts/src/index.ts",
+  "types": "./ts/src/index.ts",
+  "exports": {
+    ".": "./ts/src/index.ts",
+    "./schema": "./ts/src/schema.ts",
+    "./crypto": "./ts/src/crypto.ts",
+    "./guard": "./ts/src/guard.ts",
+    "./fingerprint": "./ts/src/fingerprint.ts",
+    "./dpapi": "./ts/src/dpapi.ts",
+    "./store": "./ts/src/store.ts",
+    "./client": "./ts/src/client.ts"
+  },
+  "dependencies": {
+    "jose": "^6.2.15",
+    "zod": "^4.6.5"
+  }
+}
