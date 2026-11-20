@@ -33,11 +33,18 @@ type agentDiskFile struct {
 // Store persists Protocol v2 credentials (DPAPI-protected on Windows), lease JWT cache,
 // and monotonic anti-rollback security metadata in a state directory.
 type Store struct {
-	Dir string
+	Dir          string
+	MachineScope bool
 }
 
 func NewStore(dir string) Store {
 	return Store{Dir: dir}
+}
+
+// NewMachineStore returns a Store using machine-scoped Windows DPAPI
+// (CRYPTPROTECT_LOCAL_MACHINE) so services and scheduled tasks share the token.
+func NewMachineStore(dir string) Store {
+	return Store{Dir: dir, MachineScope: true}
 }
 
 func (s Store) tokenPath() string    { return filepath.Join(s.Dir, "token.dpapi") }
@@ -77,7 +84,7 @@ func (s Store) SaveEnrollment(installID, installationToken string, cfg AgentConf
 	if strings.TrimSpace(installID) == "" || strings.TrimSpace(installationToken) == "" {
 		return errors.New("install_id and installation_token are required")
 	}
-	cipher, err := protectBytes([]byte(installationToken))
+	cipher, err := protectBytesWithScope([]byte(installationToken), s.MachineScope)
 	if err != nil {
 		return err
 	}

@@ -84,6 +84,26 @@ func NewVerifier(issuer string, keys map[string]ed25519.PublicKey) Verifier {
 	return Verifier{Issuer: issuer, Keys: keys}
 }
 
+// NewVerifierWithOverride loads the canonical Aegis RD keys and optionally overlays
+// an additional SPKI base64 public key (used by CLI helpers and test harnesses).
+func NewVerifierWithOverride(issuer, keyID, spkiBase64 string) (Verifier, error) {
+	keys, err := DefaultPublicKeys()
+	if err != nil {
+		return Verifier{}, err
+	}
+	if strings.TrimSpace(spkiBase64) != "" {
+		if strings.TrimSpace(keyID) == "" {
+			keyID = DefaultPublicKeyID
+		}
+		pub, err := ParsePublicKeyBase64(spkiBase64)
+		if err != nil {
+			return Verifier{}, err
+		}
+		keys[keyID] = pub
+	}
+	return NewVerifier(issuer, keys), nil
+}
+
 // ParsePublicKeyBase64 decodes an Ed25519 SPKI DER public key encoded as base64.
 func ParsePublicKeyBase64(spkiBase64 string) (ed25519.PublicKey, error) {
 	der, err := base64.StdEncoding.DecodeString(strings.TrimSpace(spkiBase64))

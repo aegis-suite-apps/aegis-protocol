@@ -5,6 +5,10 @@ package protocol
 import "os"
 
 func protectBytes(plain []byte) ([]byte, error) {
+	return protectBytesWithScope(plain, false)
+}
+
+func protectBytesWithScope(plain []byte, _ bool) ([]byte, error) {
 	out := make([]byte, len(plain))
 	copy(out, plain)
 	return out, nil

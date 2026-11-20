@@ -283,3 +283,27 @@ func TestDefaultVerifierLoadsCanonicalKey(t *testing.T) {
 		t.Fatalf("expected canonical key %q in verifier", protocol.DefaultPublicKeyID)
 	}
 }
+
+func TestMachineStoreRoundTrip(t *testing.T) {
+	store := protocol.NewMachineStore(t.TempDir())
+	if !store.MachineScope {
+		t.Fatal("expected MachineScope=true")
+	}
+	cfg := protocol.AgentConfig{
+		WorkerBaseURL:   "https://rd.tonyml.com",
+		Product:         protocol.ProductBackup,
+		AppName:         "AegisBA Enterprise",
+		EquipmentName:   "SRV-01",
+		ProtocolVersion: 2,
+	}
+	if err := store.SaveEnrollment("inst-m1", "tok-machine-secret", cfg); err != nil {
+		t.Fatalf("SaveEnrollment failed: %v", err)
+	}
+	got, err := store.LoadEnrollment()
+	if err != nil {
+		t.Fatalf("LoadEnrollment failed: %v", err)
+	}
+	if got.InstallID != "inst-m1" || got.InstallationToken != "tok-machine-secret" {
+		t.Fatalf("unexpected enrollment loaded: %+v", got)
+	}
+}

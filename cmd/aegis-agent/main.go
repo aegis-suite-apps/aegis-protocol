@@ -47,10 +47,6 @@ func usage() {
 }
 
 func buildVerifier(issuer, keyID, keyB64 string) (protocol.Verifier, error) {
-	keys, err := protocol.DefaultPublicKeys()
-	if err != nil {
-		return protocol.Verifier{}, err
-	}
 	if keyB64 == "" {
 		keyB64 = os.Getenv("AEGIS_PUBLIC_KEY_B64")
 	}
@@ -60,14 +56,7 @@ func buildVerifier(issuer, keyID, keyB64 string) (protocol.Verifier, error) {
 	if keyID == "" {
 		keyID = DefaultPublicKeyID
 	}
-	if keyB64 != "" {
-		pub, err := protocol.ParsePublicKeyBase64(keyB64)
-		if err != nil {
-			return protocol.Verifier{}, err
-		}
-		keys[keyID] = pub
-	}
-	return protocol.NewVerifier(issuer, keys), nil
+	return protocol.NewVerifierWithOverride(issuer, keyID, keyB64)
 }
 
 func runEnroll(args []string) {

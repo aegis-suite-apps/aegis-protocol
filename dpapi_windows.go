@@ -13,13 +13,23 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+const cryptProtectLocalMachine = 0x4
+
 func protectBytes(plain []byte) ([]byte, error) {
+	return protectBytesWithScope(plain, false)
+}
+
+func protectBytesWithScope(plain []byte, machineScope bool) ([]byte, error) {
 	if len(plain) == 0 {
 		return []byte{}, nil
 	}
+	flags := uint32(windows.CRYPTPROTECT_UI_FORBIDDEN)
+	if machineScope {
+		flags |= cryptProtectLocalMachine
+	}
 	inBlob := windows.DataBlob{Size: uint32(len(plain)), Data: &plain[0]}
 	var outBlob windows.DataBlob
-	if err := windows.CryptProtectData(&inBlob, nil, nil, 0, nil, windows.CRYPTPROTECT_UI_FORBIDDEN, &outBlob); err != nil {
+	if err := windows.CryptProtectData(&inBlob, nil, nil, 0, nil, flags, &outBlob); err != nil {
 		return nil, fmt.Errorf("dpapi protect: %w", err)
 	}
 	defer windows.LocalFree(windows.Handle(unsafe.Pointer(outBlob.Data)))
