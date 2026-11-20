@@ -31,10 +31,10 @@ type goldenVectors struct {
 		BaseBoardProduct   string `json:"baseBoardProduct"`
 	} `json:"windows_traits"`
 	Tokens struct {
-		ActiveBackup        string `json:"active_backup"`
-		SuspendedBackup     string `json:"suspended_backup"`
+		ActiveBackup         string `json:"active_backup"`
+		SuspendedBackup      string `json:"suspended_backup"`
 		AdvisoryShellExpired string `json:"advisory_shell_expired"`
-		WrongAudience       string `json:"wrong_audience"`
+		WrongAudience        string `json:"wrong_audience"`
 	} `json:"tokens"`
 }
 

@@ -122,7 +122,7 @@ function nodeDpapi(mode: "protect" | "unprotect", input: Uint8Array): Uint8Array
   const psScript =
     mode === "protect"
       ? "Add-Type -AssemblyName System.Security; $b=[Convert]::FromBase64String(([Console]::In.ReadToEnd()).Trim()); $o=[Security.Cryptography.ProtectedData]::Protect($b,$null,[Security.Cryptography.DataProtectionScope]::CurrentUser); [Console]::Out.Write([Convert]::ToBase64String($o))"
-      : "Add-Type -AssemblyName System.Security; $b=[Convert]::FromBase64String(([Console]::In.ReadToEnd()).Trim()); $o=[Security.Cryptography.ProtectedData]::Unprotect($b,$null,[Security.Cryptography.DataProtectionScope]::CurrentUser); [Console]::Out.Write([Convert]::ToBase64String($o))";
+      : "Add-Type -AssemblyName System.Security; $b=[Convert]::FromBase64String(([Console]::In.ReadToEnd()).Trim()); try { $o=[Security.Cryptography.ProtectedData]::Unprotect($b,$null,[Security.Cryptography.DataProtectionScope]::CurrentUser) } catch { $o=[Security.Cryptography.ProtectedData]::Unprotect($b,$null,[Security.Cryptography.DataProtectionScope]::LocalMachine) }; [Console]::Out.Write([Convert]::ToBase64String($o))";
 
   for (const shell of ["powershell.exe", "pwsh.exe"]) {
     const res = child_process.spawnSync(

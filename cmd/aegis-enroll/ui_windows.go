@@ -74,13 +74,13 @@ const (
 	bsDefPushButton = 0x00000001
 	swShowNormal    = 1
 
-	wmDestroy       = 0x0002
-	wmPaint         = 0x000F
-	wmClose         = 0x0010
-	wmCommand       = 0x0111
-	wmCtlColorEdit  = 0x0133
-	wmSetFont       = 0x0030
-	wmEnrollDone    = 0x8001 // WM_APP + 1
+	wmDestroy      = 0x0002
+	wmPaint        = 0x000F
+	wmClose        = 0x0010
+	wmCommand      = 0x0111
+	wmCtlColorEdit = 0x0133
+	wmSetFont      = 0x0030
+	wmEnrollDone   = 0x8001 // WM_APP + 1
 
 	idBtnActivate = 1 // IDOK
 	idBtnCancel   = 2 // IDCANCEL
@@ -157,10 +157,10 @@ type enrollDialog struct {
 	fontStatus   uintptr
 	fontButton   uintptr
 
-	brushBg      uintptr
-	brushCard    uintptr
-	penCard      uintptr
-	brushEditBg  uintptr
+	brushBg     uintptr
+	brushCard   uintptr
+	penCard     uintptr
+	brushEditBg uintptr
 
 	busy          bool
 	statusText    string
