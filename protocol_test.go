@@ -255,6 +255,9 @@ func TestAgentEnrollRefreshAndRevokeRoundTrip(t *testing.T) {
 	if susp.State != protocol.StateRFM || susp.Allowed {
 		t.Fatalf("expected RFM deny on suspended lease, got %+v", susp)
 	}
+	if !susp.Synced || susp.Claims == nil || susp.Claims.Product != protocol.ProductBackup {
+		t.Fatalf("expected synced decision carrying verified claims, got synced=%v claims=%+v", susp.Synced, susp.Claims)
+	}
 
 	rev := agent.CheckAccess(ctx, protocol.CheckOptions{
 		Capability:    "backup",
@@ -264,6 +267,9 @@ func TestAgentEnrollRefreshAndRevokeRoundTrip(t *testing.T) {
 	})
 	if rev.State != protocol.StateRevoked || rev.Allowed {
 		t.Fatalf("expected REVOKED, got %+v", rev)
+	}
+	if rev.Synced || rev.Claims != nil {
+		t.Fatalf("revoked decision must not carry claims or report sync")
 	}
 	if _, err := store.LoadEnrollment(); err != protocol.ErrNotEnrolled {
 		t.Fatalf("expected credentials purged after revoke, got %v", err)

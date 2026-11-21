@@ -88,7 +88,16 @@ type CheckOptions struct {
 	Now           time.Time
 }
 
+// CheckAccess evalúa el acceso con el lease en caché y, si opts.RefreshOnline, intenta
+// renovarlo antes. Decision.Synced indica si la renovación en línea tuvo éxito.
 func (a *Agent) CheckAccess(ctx context.Context, opts CheckOptions) AccessDecision {
+	synced := false
+	dec := a.checkAccess(ctx, opts, &synced)
+	dec.Synced = synced
+	return dec
+}
+
+func (a *Agent) checkAccess(ctx context.Context, opts CheckOptions, synced *bool) AccessDecision {
 	now := opts.Now
 	if now.IsZero() {
 		now = time.Now().UTC()
@@ -123,6 +132,7 @@ func (a *Agent) CheckAccess(ctx context.Context, opts CheckOptions) AccessDecisi
 			if claims, verifyErr := verifier.VerifyLease(freshJWT, enrolled.InstallID, fp, now); verifyErr == nil {
 				if nextSec, saveErr := a.store.SaveLease(freshJWT, claims); saveErr == nil {
 					security = nextSec
+					*synced = true
 				}
 			} else if errors.Is(verifyErr, ErrFingerprintMismatch) {
 				fpMismatch = true

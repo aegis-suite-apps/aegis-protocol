@@ -233,6 +233,11 @@ type AccessDecision struct {
 	EffectiveNow          string      `json:"effective_now"`
 	Reason                string      `json:"reason"`
 	Notices               []Notice    `json:"notices"`
+	// Claims es el lease verificado que respalda la decisión (nil sin enrolamiento
+	// válido). Los clientes leen de aquí la configuración firmada y los términos.
+	Claims *LeaseClaims `json:"-"`
+	// Synced es true cuando el lease se renovó en línea durante esta comprobación.
+	Synced bool `json:"-"`
 }
 
 // ResolveEffectiveTime clamps wall-clock backwards drift against the highest
@@ -252,6 +257,14 @@ func ResolveEffectiveTime(now time.Time, security SecurityMetadata) (time.Time, 
 // EvaluateAccess classifies the current execution state (ALLOW, GRACE, RFM,
 // REQUIRE_ENROLL, REVOKED, FINGERPRINT_MISMATCH) according to Protocol v2.
 func EvaluateAccess(in AccessInput) AccessDecision {
+	dec := evaluateAccess(in)
+	if in.HasEnrollment && in.Claims != nil && dec.State != StateRequireEnroll && dec.State != StateFingerprintMismatch {
+		dec.Claims = in.Claims
+	}
+	return dec
+}
+
+func evaluateAccess(in AccessInput) AccessDecision {
 	effectiveNow, rollback := ResolveEffectiveTime(in.Now, in.Security)
 	enforcement := EnforcementStrictRFM
 	var notices []Notice
