@@ -3,9 +3,12 @@ package protocol
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -250,6 +253,53 @@ func (c *Client) FetchLegalManifest(ctx context.Context, baseURL string, product
 	return out, nil
 }
 
+// HashLegalText devuelve el SHA-256 (hex) de un documento legal con saltos de línea
+// normalizados a LF, igual que lo calcula Aegis RD.
+func HashLegalText(text string) string {
+	sum := sha256.Sum256([]byte(strings.ReplaceAll(text, "\r\n", "\n")))
+	return hex.EncodeToString(sum[:])
+}
+
+// maxLegalTextBytes acota la descarga de un documento legal.
+const maxLegalTextBytes = 1 << 20
+
+// FetchLegalText descarga el Markdown exacto de doc.RawURL y verifica que su
+// SHA-256 coincida con doc.SHA256.
+func (c *Client) FetchLegalText(ctx context.Context, doc LegalDocument) (string, error) {
+	raw, err := url.Parse(doc.RawURL)
+	if err != nil || raw.Host == "" {
+		return "", fmt.Errorf("raw_url inválida: %q", doc.RawURL)
+	}
+	if _, err := NormalizeBaseURL(raw.Scheme + "://" + raw.Host); err != nil {
+		return "", err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, raw.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("accept", "text/markdown")
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", readHTTPError(resp)
+	}
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxLegalTextBytes+1))
+	if err != nil {
+		return "", err
+	}
+	if len(body) > maxLegalTextBytes {
+		return "", errors.New("documento legal demasiado grande")
+	}
+	text := string(body)
+	if !strings.EqualFold(HashLegalText(text), doc.SHA256) {
+		return "", errors.New("el documento legal descargado no coincide con su SHA-256 publicado")
+	}
+	return text, nil
+}
+
 func (c *Client) SendTermsAcceptance(ctx context.Context, baseURL, token string, acceptance TermsAcceptance) error {
 	if err := acceptance.Validate(); err != nil {
 		return err
@@ -384,6 +434,11 @@ func (a *Agent) LegalManifest(ctx context.Context) (LegalManifest, error) {
 		return LegalManifest{}, err
 	}
 	return a.client.FetchLegalManifest(ctx, base, a.product)
+}
+
+// LegalText descarga y verifica el texto de un documento del manifiesto.
+func (a *Agent) LegalText(ctx context.Context, doc LegalDocument) (string, error) {
+	return a.client.FetchLegalText(ctx, doc)
 }
 
 func (a *Agent) ReportTermsAcceptance(ctx context.Context, acceptance TermsAcceptance) error {

@@ -144,3 +144,30 @@ func TestSupportClientRoundTrip(t *testing.T) {
 		t.Fatal("empty token must be rejected locally")
 	}
 }
+
+func TestFetchLegalTextVerifiesHash(t *testing.T) {
+	const text = "# Términos\n\nTexto exacto.\n"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("content-type", "text/markdown; charset=utf-8")
+		_, _ = w.Write([]byte(text))
+	}))
+	defer srv.Close()
+	client := protocol.NewClient()
+	ctx := context.Background()
+
+	if protocol.HashLegalText("a\r\nb") != protocol.HashLegalText("a\nb") {
+		t.Fatal("HashLegalText must normalize CRLF")
+	}
+	doc := protocol.LegalDocument{RawURL: srv.URL + "/api/v2/legal/aegis-launch/terms/0.2.0.md", SHA256: protocol.HashLegalText(text)}
+	got, err := client.FetchLegalText(ctx, doc)
+	if err != nil || got != text {
+		t.Fatalf("FetchLegalText = %q, %v", got, err)
+	}
+	doc.SHA256 = strings.Repeat("0", 64)
+	if _, err := client.FetchLegalText(ctx, doc); err == nil {
+		t.Fatal("expected hash mismatch error")
+	}
+	if _, err := client.FetchLegalText(ctx, protocol.LegalDocument{RawURL: "http://example.com/x.md"}); err == nil {
+		t.Fatal("expected plain http to be refused outside localhost")
+	}
+}
