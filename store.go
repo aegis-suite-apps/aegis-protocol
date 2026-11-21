@@ -41,7 +41,9 @@ func NewStore(dir string) Store {
 }
 
 // NewMachineStore returns a Store using machine-scoped Windows DPAPI
-// (CRYPTPROTECT_LOCAL_MACHINE) so services and scheduled tasks share the token.
+// (CRYPTPROTECT_LOCAL_MACHINE) so every user, service and scheduled task on the
+// machine shares the token. Dir must already carry the intended ACL (normally
+// set by the installer); the store does not change it.
 func NewMachineStore(dir string) Store {
 	return Store{Dir: dir, MachineScope: true}
 }
@@ -55,8 +57,19 @@ func (s Store) EnsureDir() error {
 	if err := os.MkdirAll(s.Dir, 0o700); err != nil {
 		return fmt.Errorf("create state dir: %w", err)
 	}
-	_ = applyRestrictedACL(s.Dir, true)
+	s.restrict(s.Dir, true)
 	return nil
+}
+
+// restrict limita el acceso al usuario actual, SYSTEM y Administradores en el
+// ámbito de usuario. En el ámbito de máquina el estado es compartido por todos
+// los usuarios del equipo: los permisos se heredan de la carpeta, que configura
+// el instalador.
+func (s Store) restrict(path string, isDir bool) {
+	if s.MachineScope {
+		return
+	}
+	_ = applyRestrictedACL(path, isDir)
 }
 
 func (s Store) atomicWrite(target string, data []byte) error {
@@ -75,7 +88,7 @@ func (s Store) atomicWrite(target string, data []byte) error {
 		_ = os.Remove(tmp)
 		return err
 	}
-	_ = applyRestrictedACL(target, false)
+	s.restrict(target, false)
 	return nil
 }
 
