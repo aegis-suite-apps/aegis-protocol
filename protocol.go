@@ -20,6 +20,14 @@ const (
 	ProductLaunch ProductID = "aegis-launch"
 )
 
+// Tipos de evento de Aegis Launch aceptados por Aegis RD (telemetry_event.type).
+const (
+	EventLaunchOpened      = "launch.opened"
+	EventLaunchNoticeShown = "launch.notice_shown"
+	EventLaunchConsent     = "launch.consent"
+	EventLaunchResult      = "launch.result"
+)
+
 type EnforcementMode string
 
 const (

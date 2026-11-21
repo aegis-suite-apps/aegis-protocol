@@ -171,7 +171,10 @@ export const telemetryEventType = z.enum([
   "backup.run",
   "vault.heartbeat",
   "setup.provision",
-  "shell.launch",
+  "launch.opened",
+  "launch.notice_shown",
+  "launch.consent",
+  "launch.result",
   "gate.exec",
 ]);
 export type TelemetryEventType = z.infer<typeof telemetryEventType>;
