@@ -9,6 +9,10 @@ import {
   AgentStore,
   canonicalWindowsFingerprint,
   computeMachineFingerprint,
+  createTicketRequestSchema,
+  supportLinkSchema,
+  termsAcceptanceSchema,
+  TICKET_LIMITS,
   evaluateAccess,
   importPublicKeyBase64,
   importPublicKeyPem,
@@ -139,7 +143,7 @@ describe("aegis-protocol v2 TypeScript", () => {
     expect(dRollback.state).toBe("RFM");
     expect(dRollback.allowed).toBe(false);
 
-    // Advisory mode (aegis-shell): allows opening with consent even when expired
+    // Advisory mode (aegis-launch): allows opening with consent even when expired
     const shellClaims = await verifyLease(vectors.tokens.advisory_shell_expired, {
       issuer: vectors.issuer,
       publicKeys: { [vectors.key_id]: key },
@@ -186,7 +190,6 @@ describe("aegis-protocol v2 TypeScript", () => {
                 app_target: "",
                 equipment_name: "PC-TEST",
                 contact_name: "Soporte TI",
-                ticket_url: `${vectors.issuer}/help`,
                 protocol_version: 2,
               },
             }),
@@ -251,5 +254,43 @@ describe("aegis-protocol v2 TypeScript", () => {
     const { DEFAULT_ISSUER, DEFAULT_PUBLIC_KEY_ID } = await import("../src/index");
     expect(DEFAULT_ISSUER).toBe("https://rd.tonyml.com");
     expect(keys[DEFAULT_PUBLIC_KEY_ID]).toBeDefined();
+  });
+});
+
+describe("support contract", () => {
+  const sha = "0e2f6559885896acf15fba2af28b4bedb3813012eb8e7715eb77c90ef49c725b";
+
+  test("terms acceptance requires hashes, method and RFC3339 date", () => {
+    const ok = termsAcceptanceSchema.safeParse({
+      terms_version: "0.2.0",
+      terms_sha256: sha,
+      privacy_version: "0.2.0",
+      privacy_sha256: sha,
+      accepted_at: "2026-11-20T10:00:00Z",
+      method: "installer",
+      app_version: "1.0.0",
+    });
+    expect(ok.success).toBe(true);
+    const camel = termsAcceptanceSchema.safeParse({ termsVersion: "0.1.0", termsSha256: sha, method: "installer" });
+    expect(camel.success).toBe(false);
+  });
+
+  test("ticket request trims, lowercases email and enforces limits", () => {
+    const parsed = createTicketRequestSchema.parse({
+      subject: "  No abre ",
+      body: "Error al iniciar",
+      contact_name: "Ana",
+      contact_email: " Ana@Example.COM ",
+    });
+    expect(parsed.subject).toBe("No abre");
+    expect(parsed.contact_email).toBe("ana@example.com");
+    expect(
+      createTicketRequestSchema.safeParse({ ...parsed, subject: "x".repeat(TICKET_LIMITS.subject + 1) }).success,
+    ).toBe(false);
+  });
+
+  test("support links are typed", () => {
+    expect(supportLinkSchema.safeParse({ kind: "ticket", label: "Abrir ticket", url: "https://rd.tonyml.com" }).success).toBe(true);
+    expect(supportLinkSchema.safeParse({ label: "Abrir ticket", url: "https://rd.tonyml.com" }).success).toBe(false);
   });
 });

@@ -65,7 +65,7 @@ var productDisplayNames = map[protocol.ProductID]string{
 	protocol.ProductVault:  "Aegis Vault",
 	protocol.ProductGate:   "Aegis Gate",
 	protocol.ProductSetup:  "Aegis Setup",
-	protocol.ProductShell:  "AegisDesk Shell",
+	protocol.ProductLaunch: "Aegis Launch",
 }
 
 func main() {
@@ -223,7 +223,7 @@ func parseFlags(args []string, stderr io.Writer) (parsedFlags, error) {
 
 	var rawProduct string
 	var cfg parsedFlags
-	fs.StringVar(&rawProduct, "product", "", "Product ID (aegis-backup, aegis-vault, aegis-gate, aegis-setup, aegis-shell)")
+	fs.StringVar(&rawProduct, "product", "", "Product ID (aegis-backup, aegis-vault, aegis-gate, aegis-setup, aegis-launch)")
 	fs.StringVar(&cfg.stateDir, "state-dir", "", "Directory where RD credentials and lease cache are stored")
 	fs.StringVar(&cfg.rdURL, "url", protocol.DefaultIssuer, "Aegis RD base URL")
 	fs.StringVar(&cfg.version, "version", "0.3.0", "Caller application version")

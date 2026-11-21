@@ -6,7 +6,7 @@ package protocol
 import "time"
 
 const (
-	ProtocolVersion = 2
+	ProtocolVersion  = 2
 	AgentJWTAudience = "aegis-suite/agent-v2"
 )
 
@@ -17,7 +17,7 @@ const (
 	ProductVault  ProductID = "aegis-vault"
 	ProductGate   ProductID = "aegis-gate"
 	ProductSetup  ProductID = "aegis-setup"
-	ProductShell  ProductID = "aegis-shell"
+	ProductLaunch ProductID = "aegis-launch"
 )
 
 type EnforcementMode string
@@ -68,10 +68,22 @@ type Notice struct {
 	CountdownSeconds int    `json:"countdown_seconds"`
 }
 
+// SupportLinkKind identifica el propósito de un enlace de soporte. Los clientes
+// eligen enlaces por Kind, nunca por el texto visible.
+type SupportLinkKind string
+
+const (
+	LinkTicket  SupportLinkKind = "ticket"
+	LinkDocs    SupportLinkKind = "docs"
+	LinkTerms   SupportLinkKind = "terms"
+	LinkPrivacy SupportLinkKind = "privacy"
+	LinkCustom  SupportLinkKind = "custom"
+)
+
 type SupportLink struct {
-	Label string `json:"label"`
-	URL   string `json:"url"`
-	Kind  string `json:"kind,omitempty"`
+	Kind  SupportLinkKind `json:"kind"`
+	Label string          `json:"label"`
+	URL   string          `json:"url"`
 }
 
 type SupportChannel struct {
@@ -93,8 +105,7 @@ type ShellConfig struct {
 }
 
 type Contact struct {
-	Name      string `json:"name"`
-	TicketURL string `json:"ticket_url"`
+	Name string `json:"name"`
 }
 
 type LicenseClaim struct {
@@ -138,7 +149,6 @@ type AgentConfig struct {
 	AppTarget       string    `json:"app_target"`
 	EquipmentName   string    `json:"equipment_name"`
 	ContactName     string    `json:"contact_name"`
-	TicketURL       string    `json:"ticket_url"`
 	ProtocolVersion int       `json:"protocol_version"`
 }
 

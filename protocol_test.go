@@ -210,7 +210,6 @@ func TestAgentEnrollRefreshAndRevokeRoundTrip(t *testing.T) {
 					AppName:         "AegisBA Enterprise",
 					EquipmentName:   "PC-GO",
 					ContactName:     "Soporte TI",
-					TicketURL:       srv.URL + "/help",
 					ProtocolVersion: 2,
 				},
 			})

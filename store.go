@@ -26,7 +26,6 @@ type agentDiskFile struct {
 	AppTarget       string    `json:"app_target"`
 	EquipmentName   string    `json:"equipment_name"`
 	ContactName     string    `json:"contact_name"`
-	TicketURL       string    `json:"ticket_url"`
 	ProtocolVersion int       `json:"protocol_version"`
 }
 
@@ -99,7 +98,6 @@ func (s Store) SaveEnrollment(installID, installationToken string, cfg AgentConf
 		AppTarget:       cfg.AppTarget,
 		EquipmentName:   cfg.EquipmentName,
 		ContactName:     cfg.ContactName,
-		TicketURL:       cfg.TicketURL,
 		ProtocolVersion: cfg.ProtocolVersion,
 	}
 	raw, err := json.MarshalIndent(disk, "", "  ")
@@ -148,7 +146,6 @@ func (s Store) LoadEnrollment() (StoredEnrollment, error) {
 			AppTarget:       disk.AppTarget,
 			EquipmentName:   disk.EquipmentName,
 			ContactName:     disk.ContactName,
-			TicketURL:       disk.TicketURL,
 			ProtocolVersion: disk.ProtocolVersion,
 		},
 	}, nil

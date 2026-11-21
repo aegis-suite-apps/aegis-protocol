@@ -195,6 +195,9 @@ func (c *Client) do(req *http.Request, wantStatus int, out any) error {
 	if resp.StatusCode != wantStatus {
 		return readHTTPError(resp)
 	}
+	if out == nil {
+		return nil
+	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
 	if err != nil {
 		return err

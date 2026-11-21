@@ -64,7 +64,7 @@ async function main() {
         grace_days: 7,
         entitlements: ["backup", "r2_sync", "schedule"],
       },
-      contact: { name: "Soporte TI", ticket_url: `${issuer}/help` },
+      contact: { name: "Soporte TI" },
       notices: [],
     },
   });
@@ -95,7 +95,7 @@ async function main() {
         grace_days: 7,
         entitlements: ["backup"],
       },
-      contact: { name: "Soporte TI", ticket_url: `${issuer}/help` },
+      contact: { name: "Soporte TI" },
       notices: [],
     },
   });
@@ -114,7 +114,7 @@ async function main() {
       server_time: new Date((iat + 200) * 1000).toISOString(),
       cache_until: new Date((iat + 200 + 3 * 86400) * 1000).toISOString(),
       grace_until: new Date((iat + 200 + 10 * 86400) * 1000).toISOString(),
-      product: "aegis-shell",
+      product: "aegis-launch",
       app_name: "SIDC",
       machine_fingerprint_hash: fingerprintHash,
       lease_nonce: "nonce-0003-ijkl",
@@ -126,7 +126,7 @@ async function main() {
         grace_days: 14,
         entitlements: ["launch"],
       },
-      contact: { name: "Soporte TI", ticket_url: `${issuer}/help` },
+      contact: { name: "Soporte TI" },
       notices: [
         {
           id: "expired-cycle-1",
@@ -160,7 +160,7 @@ async function main() {
       grace_days: 7,
       entitlements: ["backup"],
     },
-    contact: { name: "Soporte TI", ticket_url: `${issuer}/help` },
+    contact: { name: "Soporte TI" },
     notices: [],
   })
     .setProtectedHeader({ alg: "EdDSA", kid: keyId, typ: "JWT" })

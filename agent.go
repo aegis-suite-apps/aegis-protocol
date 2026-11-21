@@ -82,10 +82,10 @@ func (a *Agent) Enroll(ctx context.Context, baseURL, code, appTarget string) (En
 }
 
 type CheckOptions struct {
-	Capability     string
-	RFMAllowed     bool
-	RefreshOnline  bool
-	Now            time.Time
+	Capability    string
+	RFMAllowed    bool
+	RefreshOnline bool
+	Now           time.Time
 }
 
 func (a *Agent) CheckAccess(ctx context.Context, opts CheckOptions) AccessDecision {

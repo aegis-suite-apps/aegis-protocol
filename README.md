@@ -6,7 +6,7 @@ Documentación de diseño y especificación completa en [`../docs/CONTRATO-AEGIS
 
 ## Estructura
 
-- **Raíz Go (`github.com/aegis-suite-apps/aegis-protocol`):** paquete Go reutilizable para `aegis-backup`, `aegis-setup`, `aegis-shell`, más los binarios `cmd/aegis-agent` (CLI para automatización y `aegis-gate`) y `cmd/aegis-enroll` (ventana nativa Win32 de enrolamiento para instaladores y apps de la suite).
+- **Raíz Go (`github.com/aegis-suite-apps/aegis-protocol`):** paquete Go reutilizable para `aegis-backup`, `aegis-setup`, `aegis-launch`, más los binarios `cmd/aegis-agent` (CLI para automatización y `aegis-gate`) y `cmd/aegis-enroll` (ventana nativa Win32 de enrolamiento para instaladores y apps de la suite).
 - **`ts/` (`@aegis-suite-apps/protocol`):** esquemas Zod v2, firma/verificación Ed25519 (`jose`), evaluador `Guard`, huella de equipo, DPAPI nativo en Windows (`bun:ffi`) y cliente HTTP para `aegis-rd` y `aegis-vault`.
 - **`vectors/`:** vectores criptográficos generados en TypeScript y verificados tanto en TypeScript como en Go.
 
